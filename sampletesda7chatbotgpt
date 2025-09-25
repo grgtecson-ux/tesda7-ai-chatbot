@@ -1,0 +1,331 @@
+"""
+TESDA Region VII Chatbot
+A conversational AI assistant for TESDA (Technical Education and Skills Development Authority) Region VII
+Provides information about TESDA programs, courses, requirements, and services.
+"""
+
+import re
+import random
+from datetime import datetime
+from typing import Dict, List, Optional, Tuple
+
+class TESDARegion7Chatbot:
+    """
+    A chatbot specifically designed for TESDA Region VII to assist with:
+    - Program inquiries
+    - Course information
+    - Requirements and qualifications
+    - Application processes
+    - Contact information
+    - Training schedules
+    """
+    
+    def __init__(self):
+        self.name = "TESDA Region VII Assistant"
+        self.version = "1.0"
+        self.region = "Region VII (Central Visayas)"
+        self.provinces = ["Cebu", "Bohol", "Negros Oriental", "Siquijor"]
+        
+        # Knowledge base for TESDA Region VII
+        self.knowledge_base = {
+            "greetings": [
+                "Hello! I'm your TESDA Region VII assistant. How can I help you today?",
+                "Hi there! Welcome to TESDA Region VII. What would you like to know?",
+                "Good day! I'm here to assist you with TESDA Region VII information.",
+                "Hello! I can help you with TESDA programs, courses, and services in Central Visayas."
+            ],
+            "programs": {
+                "tvl": {
+                    "name": "Technical-Vocational Livelihood (TVL) Program",
+                    "description": "Comprehensive technical-vocational education program",
+                    "duration": "6 months to 2 years",
+                    "tracks": ["Agri-Fishery Arts", "Home Economics", "ICT", "Industrial Arts"]
+                },
+                "nttc": {
+                    "name": "National TVET Trainers Certificate (NTTC)",
+                    "description": "Training program for technical-vocational trainers",
+                    "duration": "40 hours",
+                    "requirements": ["Bachelor's degree or equivalent", "2 years industry experience"]
+                },
+                "tvl_plus": {
+                    "name": "TVL Plus Program",
+                    "description": "Enhanced TVL with additional competencies",
+                    "duration": "1-3 years",
+                    "features": ["Industry partnerships", "Work immersion", "Certification"]
+                }
+            },
+            "requirements": {
+                "general": [
+                    "Valid ID (any government-issued ID)",
+                    "Birth certificate",
+                    "2x2 ID picture (2 copies)",
+                    "Barangay clearance",
+                    "Medical certificate"
+                ],
+                "scholarship": [
+                    "TESDA Scholarship Application Form",
+                    "Income tax return or certificate of non-filing",
+                    "Certificate of indigency (if applicable)",
+                    "Proof of residence"
+                ]
+            },
+            "contact_info": {
+                "regional_office": {
+                    "address": "TESDA Regional Office VII, Cebu City",
+                    "phone": "(032) 254-0034",
+                    "email": "region7@tesda.gov.ph"
+                },
+                "provincial_offices": {
+                    "cebu": "TESDA Cebu Provincial Office",
+                    "bohol": "TESDA Bohol Provincial Office", 
+                    "negros_oriental": "TESDA Negros Oriental Provincial Office",
+                    "siquijor": "TESDA Siquijor Provincial Office"
+                }
+            }
+        }
+        
+        # Common query patterns
+        self.query_patterns = {
+            "greeting": [r"\b(hi|hello|hey|good morning|good afternoon|good evening)\b"],
+            "programs": [r"\b(programs?|courses?|training|education)\b"],
+            "requirements": [r"\b(requirements?|needed|documents?|qualifications?)\b"],
+            "scholarship": [r"\b(scholarship|free|tuition|financial|assistance)\b"],
+            "contact": [r"\b(contact|phone|address|location|office)\b"],
+            "schedule": [r"\b(schedule|time|when|enrollment|registration)\b"],
+            "application": [r"\b(apply|application|how to|process|steps?)\b"]
+        }
+    
+    def get_response(self, user_input: str) -> str:
+        """
+        Generate a response based on user input
+        """
+        user_input = user_input.lower().strip()
+        
+        # Handle empty input
+        if not user_input:
+            return "I didn't catch that. Could you please repeat your question?"
+        
+        # Determine intent and generate response
+        intent = self._classify_intent(user_input)
+        response = self._generate_response(intent, user_input)
+        
+        return response
+    
+    def _classify_intent(self, user_input: str) -> str:
+        """
+        Classify user intent based on input patterns
+        """
+        for intent, patterns in self.query_patterns.items():
+            for pattern in patterns:
+                if re.search(pattern, user_input, re.IGNORECASE):
+                    return intent
+        
+        return "general"
+    
+    def _generate_response(self, intent: str, user_input: str) -> str:
+        """
+        Generate appropriate response based on classified intent
+        """
+        if intent == "greeting":
+            return random.choice(self.knowledge_base["greetings"])
+        
+        elif intent == "programs":
+            return self._get_program_info(user_input)
+        
+        elif intent == "requirements":
+            return self._get_requirements_info()
+        
+        elif intent == "scholarship":
+            return self._get_scholarship_info()
+        
+        elif intent == "contact":
+            return self._get_contact_info()
+        
+        elif intent == "schedule":
+            return self._get_schedule_info()
+        
+        elif intent == "application":
+            return self._get_application_info()
+        
+        else:
+            return self._get_general_response(user_input)
+    
+    def _get_program_info(self, user_input: str) -> str:
+        """
+        Provide information about TESDA programs
+        """
+        response = "Here are the main TESDA programs available in Region VII:\n\n"
+        
+        for program_key, program_info in self.knowledge_base["programs"].items():
+            response += f"📚 {program_info['name']}\n"
+            response += f"   Description: {program_info['description']}\n"
+            response += f"   Duration: {program_info['duration']}\n"
+            if 'tracks' in program_info:
+                response += f"   Tracks: {', '.join(program_info['tracks'])}\n"
+            response += "\n"
+        
+        response += "For specific course details and availability, please contact your nearest TESDA office. They can provide you with the complete list of courses and help you choose the best option for your career goals."
+        return response
+    
+    def _get_requirements_info(self) -> str:
+        """
+        Provide information about general requirements
+        """
+        response = "📋 General Requirements for TESDA Programs:\n\n"
+        
+        for i, req in enumerate(self.knowledge_base["requirements"]["general"], 1):
+            response += f"{i}. {req}\n"
+        
+        response += "\n📋 Additional Requirements for Scholarship:\n"
+        for i, req in enumerate(self.knowledge_base["requirements"]["scholarship"], 1):
+            response += f"{i}. {req}\n"
+        
+        response += "\nNote: Requirements may vary depending on the specific program. Please contact the nearest TESDA office for complete details."
+        return response
+    
+    def _get_scholarship_info(self) -> str:
+        """
+        Provide information about TESDA scholarships
+        """
+        response = "🎓 TESDA Scholarship Programs:\n\n"
+        response += "1. **Training for Work Scholarship Program (TWSP)**\n"
+        response += "   - Free training with allowance\n"
+        response += "   - Priority courses for in-demand jobs\n\n"
+        
+        response += "2. **Special Training for Employment Program (STEP)**\n"
+        response += "   - Community-based training\n"
+        response += "   - Free training with toolkits\n\n"
+        
+        response += "3. **Private Education Student Financial Assistance (PESFA)**\n"
+        response += "   - Financial assistance for private TVET institutions\n\n"
+        
+        response += "📞 For scholarship applications, contact your nearest TESDA office or visit our website."
+        return response
+    
+    def _get_contact_info(self) -> str:
+        """
+        Provide contact information
+        """
+        response = "📞 TESDA Region VII Contact Information:\n\n"
+        
+        contact = self.knowledge_base["contact_info"]["regional_office"]
+        response += f"🏢 Regional Office:\n"
+        response += f"   Address: {contact['address']}\n"
+        response += f"   Phone: {contact['phone']}\n"
+        response += f"   Email: {contact['email']}\n\n"
+        
+        response += "🏢 Provincial Offices:\n"
+        for province, office in self.knowledge_base["contact_info"]["provincial_offices"].items():
+            response += f"   • {province.title()}: {office}\n"
+        
+        response += "\n🌐 Website: www.tesda.gov.ph"
+        return response
+    
+    def _get_schedule_info(self) -> str:
+        """
+        Provide information about training schedules
+        """
+        response = "📅 Training Schedules:\n\n"
+        response += "• Training schedules vary by program and location\n"
+        response += "• Most programs run for 6 months to 2 years\n"
+        response += "• Classes are typically held Monday to Friday\n"
+        response += "• Some programs offer evening and weekend classes\n\n"
+        response += "�� Contact your nearest TESDA office for specific schedules and availability."
+        return response
+    
+    def _get_application_info(self) -> str:
+        """
+        Provide information about application process
+        """
+        response = "�� How to Apply for TESDA Programs:\n\n"
+        response += "1. **Visit the nearest TESDA office** in your area\n"
+        response += "2. **Inquire about available programs** and requirements\n"
+        response += "3. **Submit required documents** (see requirements list)\n"
+        response += "4. **Take the assessment** (if required)\n"
+        response += "5. **Wait for confirmation** and training schedule\n\n"
+        response += "💡 **Tip**: Bring all required documents to avoid delays in processing."
+        return response
+    
+    def _get_general_response(self, user_input: str) -> str:
+        """
+        Handle general queries and provide helpful information
+        """
+        if any(word in user_input for word in ["help", "what can you do", "capabilities"]):
+            return self._get_help_info()
+        
+        elif any(word in user_input for word in ["about", "what is tesda", "tesda"]):
+            return self._get_about_tesda()
+        
+        else:
+            return ("I'm here to help you with TESDA Region VII information! You can ask me about:\n\n"
+                   "• Programs and courses\n"
+                   "• Requirements and qualifications\n"
+                   "• Scholarship opportunities\n"
+                   "• Application process\n"
+                   "• Contact information\n"
+                   "• Training schedules\n\n"
+                   "What would you like to know?")
+    
+    def _get_help_info(self) -> str:
+        """
+        Provide help information
+        """
+        return ("🤖 I'm your TESDA Region VII Assistant! I can help you with:\n\n"
+               "📚 **Programs & Courses** - Information about available training programs\n"
+               "📋 **Requirements** - Documents and qualifications needed\n"
+               "🎓 **Scholarships** - Financial assistance programs\n"
+               "📞 **Contact Info** - TESDA office locations and numbers\n"
+               "�� **Schedules** - Training timetables and enrollment periods\n"
+               "📝 **Applications** - How to apply for programs\n\n"
+               "Just ask me anything about TESDA Region VII!")
+    
+    def _get_about_tesda(self) -> str:
+        """
+        Provide information about TESDA
+        """
+        return ("🏛️ **About TESDA (Technical Education and Skills Development Authority)**\n\n"
+               "TESDA is the government agency responsible for managing and supervising technical education and skills development in the Philippines.\n\n"
+               "**Mission**: To provide direction, policies, programs and standards towards quality technical education and skills development.\n\n"
+               "**Vision**: A leading partner in the development of the Filipino workforce with world-class competence and positive work values.\n\n"
+               "**Region VII (Central Visayas)** serves the provinces of Cebu, Bohol, Negros Oriental, and Siquijor.")
+    
+    def start_conversation(self):
+        """
+        Start an interactive conversation with the chatbot
+        """
+        print(f"🤖 {self.name} v{self.version}")
+        print(f"📍 Serving {self.region}")
+        print("=" * 50)
+        print("Type 'quit', 'exit', or 'bye' to end the conversation")
+        print("Type 'help' for available commands")
+        print("=" * 50)
+        
+        while True:
+            try:
+                user_input = input("\n👤 You: ").strip()
+                
+                if user_input.lower() in ['quit', 'exit', 'bye', 'goodbye']:
+                    print(f"\n�� {self.name}: Thank you for using TESDA Region VII Assistant! Have a great day! ��")
+                    break
+                
+                if not user_input:
+                    continue
+                
+                response = self.get_response(user_input)
+                print(f"\n🤖 {self.name}: {response}")
+                
+            except KeyboardInterrupt:
+                print(f"\n\n🤖 {self.name}: Goodbye! Thank you for using TESDA Region VII Assistant! 👋")
+                break
+            except Exception as e:
+                print(f"\n�� {self.name}: I encountered an error. Please try again. ({str(e)})")
+
+def main():
+    """
+    Main function to run the TESDA Region VII Chatbot
+    """
+    chatbot = TESDARegion7Chatbot()
+    chatbot.start_conversation()
+
+if __name__ == "__main__":
+    main()
