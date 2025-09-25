@@ -1,23 +1,75 @@
-import streamlit as streamlit
+import streamlit as st
 import time
-#
+import re
+
+# --------------------------
+# URL auto-linking helper
+# --------------------------
+URL_RE = re.compile(r'(?P<url>((https?://)?(?:www\.)?[a-z0-9.-]+\.[a-z]{2,}(?:/[^\s<>\)]*)?))', re.IGNORECASE)
+
+def linkify(text: str) -> str:
+    text = text or ""
+    def _repl(m):
+        url = m.group('url')
+        href = url if url.startswith(('http://', 'https://')) else f'https://{url}'
+        return f'<a href="{href}" target="_blank" rel="noopener noreferrer">{url}</a>'
+    return URL_RE.sub(_repl, text)
+
+# --------------------------
+# Substring matching helpers
+# --------------------------
+def contains_any(message: str, patterns) -> bool:
+    m = (message or "").lower()
+    return any(p.lower() in m for p in patterns)
+
+def contains_number(message: str, num: str) -> bool:
+    return re.search(rf"{re.escape(num)}", message or "") is not None
+
 # --------------------------
 # Simple rule-based chatbot function
 # --------------------------
 def chatbot_response(user_message: str) -> str:
     user_message = (user_message or "").lower().strip()
 
-    if user_message in ["hi", "hello", "hey", "start"]:
+    # greetings
+    if contains_any(user_message, ["hi", "hello", "hey", "start"]):
         return "👋 Hello! How can I help you today?"
 
-    elif "create account" in user_message or user_message == "1":
-        return "📝 You can create an account here: https://e-tesda.gov.ph/login/signup.php"
+    # 1) Create account (BSRS - scholarship)
+    elif contains_any(user_message, [
+        "create account bsrs", "bsrs", "scholar", "scholarship", "bsrs.tesda.gov.ph"
+    ]) or contains_number(user_message, "1"):
+        return "📝 You can create an account for scholarship here: https://bsrs.tesda.gov.ph/"
 
-    elif "courses" in user_message or user_message == "2":
-        return "📦 Sure! Explore the available courses here: https://e-tesda.gov.ph/course"
+    # 2) Create account (TOP - online programs)
+    elif contains_any(user_message, [
+        "create account top", "top", "e-tesda", "etesda", "online program", "online course", "e learning", "e-learning"
+    ]) or contains_number(user_message, "2"):
+        return "📝 You can create an account for online programs here: https://e-tesda.gov.ph/"
 
-    elif "talk to agent" in user_message or user_message == "3":
+    # 3) TESDA Programs / Courses
+    elif contains_any(user_message, [
+        "courses", "course", "programs", "program", "training regulations", "training_regulations", "tr"
+    ]) or contains_number(user_message, "3"):
+        return "📦 Sure! Explore the available TESDA Programs here: https://tesda.gov.ph/Download/Training_Regulations"
+
+    # 4) Verification
+    elif contains_any(user_message, [
+        "verify", "verification", "rwac", "nc verification", "certificate check", "check nc", "validate nc"
+    ]) or contains_number(user_message, "4"):
+        return "✅ You can verify your National Certificates (NCs) here: https://tesda.gov.ph/Rwac/"
+
+    # 5) Talk to agent / human
+    elif contains_any(user_message, [
+        "talk to agent", "agent", "human", "support", "helpdesk", "call", "speak to person", "connect me"
+    ]) or contains_number(user_message, "5"):
         return "📞 Okay, I’m connecting you to our human support staff."
+
+    # 6) Help / menu
+    elif contains_any(user_message, [
+        "help", "menu", "options", "what can you do", "assist"
+    ]) or contains_number(user_message, "6"):
+        return "🙋 For more assistance, you may contact the TESDA Regional Office through its Social Media account: https://facebook.com/tesdasietecentralvisayas"
 
     else:
         return "❓ Sorry, I didn’t understand that. Please choose an option below or type 'help'."
@@ -43,31 +95,37 @@ with st.sidebar:
     st.write("This is a simple **rule-based chatbot** built with Streamlit. You can:")
     st.markdown("""
     - 👋 Greet the bot  
-    - 📝 Create an account  
-    - 📦 View courses  
+    - 📝 Create an account (TOP/ BSRS)  
+    - 📦 View TESDA Programs  
     - 📞 Talk to a human agent  
     """)
     if st.button("🔄 Reset Chat"):
-        st.session_state.messages = [("Bot", "👋 Hi! Welcome to TESDA Chatbot. Type 'help' to see options.")]
+        st.session_state.messages = [("Bot", "👋 Hi! Welcome to TESDA Bot. Type 'help' to see options.")]
         st.session_state.last_action = None
         st.experimental_rerun()
 
 # --------------------------
 # Top title
 # --------------------------
-st.markdown("<h1 style='text-align: center; color: #4CAF50;'>🤖 Rule-Based Chatbot</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #4CAF50;'>😾 Rule-Based Chatbot</h1>", unsafe_allow_html=True)
 st.write("Interact with the chatbot by typing or using quick action buttons below.")
 
 # --------------------------
 # Quick action buttons (safe pattern)
 # --------------------------
-col1, col2, col3 = st.columns(3)
-if col1.button("📝 Create Account"):
-    st.session_state.last_action = "create account"
-if col2.button("📦 Courses"):
+col1, col2, col3, col4, col5, col6 = st.columns(6)
+if col1.button("📝 Create Account (Scholarship)"):
+    st.session_state.last_action = "create account bsrs"
+if col2.button("📝 Create Account (Online Courses)"):
+    st.session_state.last_action = "create account top"
+if col3.button("📋TESDA Programs"):
     st.session_state.last_action = "courses"
-if col3.button("📞 Talk to Agent"):
+if col4.button("📞 Talk to Agent"):
     st.session_state.last_action = "talk to agent"
+if col5.button("✅ Verification"):
+    st.session_state.last_action = "verify"
+if col6.button("🙋 Help"):
+    st.session_state.last_action = "help"
 
 # --------------------------
 # Determine user_input:
@@ -123,7 +181,7 @@ if user_input:
         st.session_state.typed_value = ""
 
 # --------------------------
-# Display conversation safely
+# Display conversation safely (with linkify)
 # --------------------------
 for entry in st.session_state.messages:
     # defensive check to avoid unpacking errors
@@ -132,14 +190,16 @@ for entry in st.session_state.messages:
         continue
     role, msg = entry
     if role == "You":
+        safe_msg = linkify(msg)
         st.markdown(
-            f"<div style='background-color:#FFFFC5; padding:10px; border-radius:15px; margin:5px; text-align:right;'>"
-            f"🧑 <b>{role}:</b> {msg}</div>",
+            f"<div style='background-color:#DCF8C6; padding:10px; border-radius:15px; margin:5px; text-align:right;'>"
+            f"🧑 <b>{role}:</b> {safe_msg}</div>",
             unsafe_allow_html=True,
         )
     else:
+        safe_msg = linkify(msg)
         st.markdown(
-            f"<div style='background-color:#C2D6F6; padding:10px; border-radius:15px; margin:5px; text-align:left;'>"
-            f"👽 <b>{role}:</b> {msg}</div>",
+            f"<div style='background-color:#E6E6FA; padding:10px; border-radius:15px; margin:5px; text-align:left;'>"
+            f"😾 <b>{role}:</b> {safe_msg}</div>",
             unsafe_allow_html=True,
         )
